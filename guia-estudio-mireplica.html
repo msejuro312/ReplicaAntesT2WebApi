@@ -84,8 +84,8 @@
 <body>
 <div class="container">
 
-<h1>Gu&iacute;a de Estudio: MiR&eacute;plica <small>Reconstrucci&oacute;n del TEMA03 API REST &mdash; ASP.NET Core 7 + SQL Server</small></h1>
-<p class="subtitle">Esta gu&iacute;a documenta la <strong>r&eacute;plica del proyecto API REST</strong> del profe (carpeta <code>TEMA03</code> de <code>ReposProfe</code>), creada por m&iacute; misma en <code>MiReplica\WebApi\WebApplication1</code>. Incluye el <strong>c&oacute;digo &iacute;ntegro</strong> de cada archivo tal como qued&oacute;, el <strong>orden real de creaci&oacute;n</strong> (por dependencias, Program.cs al final), los <strong>errores que resolv&iacute;</strong> y la <strong>regla del puerto</strong> (<code>https://localhost:7229</code>). Se ampliar&aacute; con la Fase 2: el cliente MVC que consume estos servicios.</p>
+<h1>Gu&iacute;a de Estudio: MiR&eacute;plica <small>Reconstrucci&oacute;n del TEMA03 API REST + TEMA03_CONSUMIR_SERVICIOS (cliente MVC) &mdash; ASP.NET Core 7 + SQL Server</small></h1>
+<p class="subtitle">Esta gu&iacute;a documenta la <strong>r&eacute;plica de los dos proyectos</strong> del profe (<code>TEMA03</code> y <code>TEMA03_CONSUMIR_SERVICIOS</code> de <code>ReposProfe</code>), creados por m&iacute; misma en <code>MiReplica</code>: la <strong>API REST</strong> (<code>MiReplica\WebApi\WebApplication1</code>) y el <strong>cliente MVC</strong> (<code>MiReplica\ConsumoServicios\WebApplication1</code>) que consume esa API con <code>HttpClient</code>. Incluye el <strong>c&oacute;digo &iacute;ntegro</strong> de cada archivo tal como qued&oacute;, el <strong>orden real de creaci&oacute;n</strong> (por dependencias, Program.cs al final), los <strong>errores que resolv&iacute;</strong> y la <strong>regla del puerto</strong> (<code>apiBase</code> del cliente = <code>https://localhost:7229</code>).</p>
 
 <div class="toc">
   <h2>&Iacute;ndice de navegaci&oacute;n</h2>
@@ -93,7 +93,7 @@
     <li><a href="#intro">Introducci&oacute;n: qu&eacute; es mi r&eacute;plica y c&oacute;mo funciona</a></li>
     <li><a href="#requisitos">Requisitos previos: SQL Server, SSMS, .NET 7 y Visual Studio</a></li>
     <li><a href="#sql">Paso 0: La base de datos DB_BIBLIOTECA (ya creada con el script del profe)</a></li>
-    <li><a href="#api">LA API REST (MiReplica\WebApi\WebApplication1)</a>
+    <li><a href="#api">PROYECTO 1: LA API REST (MiReplica\WebApi\WebApplication1)</a>
       <ol class="sub-item">
         <li><a href="#api-paso1">4.1. Crear el proyecto y agregar los paquetes NuGet (desde Visual Studio)</a></li>
         <li><a href="#api-paso2">4.2. appsettings.json (la cadena de conexi&oacute;n)</a></li>
@@ -105,9 +105,19 @@
         <li><a href="#api-paso8">4.8. Compilar, ejecutar y probar en Swagger (los 6 endpoints)</a></li>
       </ol>
     </li>
+    <li><a href="#cliente">PROYECTO 2: EL CLIENTE MVC (MiReplica\ConsumoServicios\WebApplication1)</a>
+      <ol class="sub-item">
+        <li><a href="#cliente-paso1">5.1. Crear el proyecto y los paquetes NuGet (Newtonsoft.Json, no SqlClient)</a></li>
+        <li><a href="#cliente-paso2">5.2. Program.cs (MVC + AddHttpClient)</a></li>
+        <li><a href="#cliente-paso3">5.3. Models: Autor, Libro, ApiResponse&lt;T&gt;</a></li>
+        <li><a href="#cliente-paso4">5.4. Controllers/AutorController.cs (el consumidor con HttpClient)</a></li>
+        <li><a href="#cliente-paso5">5.5. La vista clave: Views/Autor/Index.cshtml</a></li>
+        <li><a href="#cliente-paso6">5.6. launchSettings.json y c&oacute;mo ejecutar el cliente</a></li>
+        <li><a href="#cliente-paso7">5.7. C&oacute;mo se conectan los 2 proyectos y la prueba integrada</a></li>
+      </ol>
+    </li>
     <li><a href="#errores">Errores reales que resolv&iacute; (para no volver a tropezar)</a></li>
-    <li><a href="#resumen">Resumen: orden de creaci&oacute;n por dependencias</a></li>
-    <li><a href="#pendiente">Pendiente: Fase 2 &mdash; cliente MVC (se agregar&aacute;)</a></li>
+    <li><a href="#resumen">Resumen: orden completo de creaci&oacute;n y ejecuci&oacute;n</a></li>
   </ol>
 </div>
 
@@ -115,29 +125,35 @@
 <div class="section-card" id="intro">
   <h2>1. Introducci&oacute;n: qu&eacute; es mi r&eacute;plica y c&oacute;mo funciona</h2>
 
-  <p>Mi r&eacute;plica reconstruye, <strong>creando los archivos a mano</strong>, el proyecto <strong>API REST</strong> del profe (carpeta <code>TEMA03</code> de <code>ReposProfe</code>). Es una <strong>Web API de ASP.NET Core 7</strong> que se conecta a <code>DB_BIBLIOTECA</code> en SQL Server usando <strong>ADO.NET con procedimientos almacenados</strong> (sin ORM).</p>
+  <p>Mi r&eacute;plica reconstruye, <strong>creando los archivos a mano</strong>, los <strong>2 proyectos</strong> del profe: la <strong>API REST</strong> (carpeta <code>TEMA03</code>) y el <strong>cliente MVC</strong> (carpeta <code>TEMA03_CONSUMIR_SERVICIOS</code>). Son una <strong>pareja</strong> (frontend + backend): la API es una <strong>Web API de ASP.NET Core 7</strong> que habla con <code>DB_BIBLIOTECA</code> usando <strong>ADO.NET con procedimientos almacenados</strong> (sin ORM), y el cliente MVC <strong>consume esa API por HTTP</strong> con <code>HttpClient</code>. El cliente <strong>nunca toca la base de datos</strong>.</p>
 
   <table>
     <tr><th>Proyecto</th><th>Qu&eacute; es</th><th>Tecnolog&iacute;a</th><th>Puerto</th><th>&iquest;Toca la BD?</th></tr>
-    <tr><td><code>WebApplication1</code> (WebApi)</td><td><strong>API REST</strong> "de servicio"</td><td>ASP.NET Core Web API (.NET 7)</td><td><code>https://localhost:7229</code></td><td><strong>S&iacute;</strong> &mdash; ejecuta los SPs de <code>DB_BIBLIOTECA</code></td></tr>
+    <tr><td><code>WebApi\WebApplication1</code></td><td><strong>API REST</strong> "de servicio"</td><td>ASP.NET Core Web API (.NET 7)</td><td><code>https://localhost:7229</code></td><td><strong>S&iacute;</strong> &mdash; ejecuta los SPs de <code>DB_BIBLIOTECA</code></td></tr>
+    <tr><td><code>ConsumoServicios\WebApplication1</code></td><td><strong>Cliente MVC</strong> que "consume servicios"</td><td>ASP.NET Core MVC (.NET 7)</td><td><code>http://localhost:5217</code></td><td><strong>No</strong> &mdash; le pide los datos a la API</td></tr>
   </table>
 
-  <h3>El flujo (todav&iacute;a sin cliente)</h3>
-  <div class="diagram">Navegador / Swagger / Postman
+  <h3>El flujo completo (de arriba hacia abajo)</h3>
+  <div class="diagram">Navegador (usuario)
       |
+      |  GET http://localhost:5217/Autor
+      v
+[1] CLIENTE MVC (ConsumoServicios)  -->  AutorController.Index()
+      |  NO toca la base de datos
+      |  usa HttpClient con apiBase = "https://localhost:7229"
       |  GET https://localhost:7229/api/Autor
       v
-[1] API REST  -->  AutorController.Get()  -->  AutorService.list()
+[2] API REST (WebApi)  -->  AutorController.Get()  -->  AutorService.list()
       |  inyecci&oacute;n de dependencias (IAutorService)
       |  ADO.NET: SqlConnection + SqlCommand + CommandType.StoredProcedure
       v
-[2] SQL Server  -->  EXEC sp_list_autores  (sobre DB_BIBLIOTECA)
+[3] SQL Server  -->  EXEC sp_list_autores  (sobre DB_BIBLIOTECA)
       ^
       |  respuesta: filas (AutorId, Nombre)
       |  la API las devuelve como JSON
-      |  (en la Fase 2, el cliente MVC consumir&aacute; ese JSON con HttpClient)</div>
+      |  el cliente las deserializa a List&lt;Autor&gt; y las pinta en una tabla</div>
 
-  <div class="info-box"><strong>Regla del puerto (documentada):</strong> mi API queda en <code>https://localhost:7229</code>. El futuro cliente MVC deber&aacute; usar <code>apiBase = "https://localhost:7229"</code>. El puerto HTTPS de la API <strong>siempre</strong> debe coincidir con el <code>apiBase</code> del cliente.</div>
+  <div class="info-box"><strong>Regla del puerto (documentada):</strong> la API queda en <code>https://localhost:7229</code> y el cliente usa <code>apiBase = "https://localhost:7229"</code>. El puerto HTTPS de la API <strong>siempre</strong> debe coincidir con el <code>apiBase</code> del cliente. El puerto del cliente (5217) es independiente: solo es la direcci&oacute;n donde navega el usuario.</div>
 
   <h3>Los 6 endpoints que expone la API</h3>
   <table>
@@ -912,8 +928,276 @@ SELECT LibroId, AutorId, Titulo, ISBN, AnioPublicacion FROM DB_BIBLIOTECA.dbo.Li
 </div>
 
 <!-- ============================================================ -->
+<div class="section-card" id="cliente">
+  <h2>5. PROYECTO 2: El cliente MVC (MiReplica\ConsumoServicios\WebApplication1)</h2>
+
+  <p>Este es el proyecto que <strong>"consume los servicios"</strong> de la API. Es un <strong>ASP.NET Core MVC</strong> normal, con una diferencia clave: <strong>no toca la base de datos</strong>. Sus controllers piden los datos a la API por <strong>HTTP</strong> usando <code>HttpClient</code> y deserializan el JSON de respuesta.</p>
+
+  <h3 id="cliente-paso1">5.1. Crear el proyecto y los paquetes NuGet (Newtonsoft.Json, NO SqlClient)</h3>
+
+  <p>El proyecto lo cre&eacute; con el CLI de .NET (target <code>net7.0</code>):</p>
+<pre>
+dotnet new mvc -n WebApplication1 -f net7.0 -o WebApplication1</pre>
+
+  <p>El proyecto MVC viene con sus carpetas (Controllers, Views, wwwroot, etc.). Despu&eacute;s, <strong>desde el Administrador de paquetes NuGet de VS</strong>, agregu&eacute; el paquete que el cliente S&Iacute; necesita:</p>
+
+  <table>
+    <tr><th>Paquete</th><th>Versi&oacute;n</th><th>&iquest;Por qu&eacute;?</th></tr>
+    <tr><td><code>Newtonsoft.Json</code></td><td><code>13.0.1</code></td><td>Deserializar el JSON que devuelve la API (<code>JsonConvert.DeserializeObject</code>)</td></tr>
+  </table>
+
+  <div class="danger-box"><strong>Lecci&oacute;n aprendida: el cliente NO lleva <code>Microsoft.Data.SqlClient</code>.</strong> Primero se lo agregu&eacute; por costumbre (porque la API lo usa), pero el cliente <strong>nunca habla con SQL Server</strong> &mdash; solo consume la API por HTTP. Tenerlo no rompe nada, pero es innecesario y confunde el rol de cada proyecto. Lo quito. El <code>SqlClient</code> es <strong>exclusivo de la WebApi</strong>.</div>
+
+  <p>El archivo <code>WebApplication1.csproj</code> del cliente queda as&iacute;:</p>
+
+  <span class="code-label">WebApplication1.csproj (cliente)</span>
+<pre>
+<span class="tag">&lt;Project</span> <span class="attr">Sdk</span>=<span class="str">"Microsoft.NET.Sdk.Web"</span><span class="tag">&gt;</span>
+
+  <span class="tag">&lt;PropertyGroup&gt;</span>
+    <span class="tag">&lt;TargetFramework&gt;</span>net7.0<span class="tag">&lt;/TargetFramework&gt;</span>
+    <span class="tag">&lt;Nullable&gt;</span>enable<span class="tag">&lt;/Nullable&gt;</span>
+    <span class="tag">&lt;ImplicitUsings&gt;</span>enable<span class="tag">&lt;/ImplicitUsings&gt;</span>
+  <span class="tag">&lt;/PropertyGroup&gt;</span>
+
+  <span class="tag">&lt;ItemGroup&gt;</span>
+    <span class="tag">&lt;PackageReference</span> <span class="attr">Include</span>=<span class="str">"Newtonsoft.Json"</span> <span class="attr">Version</span>=<span class="str">"13.0.1"</span> <span class="tag">/&gt;</span>
+  <span class="tag">&lt;/ItemGroup&gt;</span>
+
+<span class="tag">&lt;/Project&gt;</span></pre>
+
+  <div class="info-box"><strong>&iquest;Por qu&eacute; Newtonsoft.Json y no System.Text.Json?</strong> Porque el profe usa <code>JsonConvert.DeserializeObject</code> (Newtonsoft). En la API, Newtonsoft llegaba <em>de paso</em> por Swashbuckle; en el cliente lo declaro <strong>expl&iacute;cito</strong> para no depender de dependencias transitivas.</div>
+
+  <h3 id="cliente-paso2">5.2. Program.cs (MVC + AddHttpClient)</h3>
+
+  <p>Igual que la plantilla MVC, pero con un cambio esencial: <code>builder.Services.AddHttpClient()</code> para poder inyectar <code>HttpClient</code> en los controllers.</p>
+
+  <span class="code-label">Program.cs (cliente)</span>
+<pre><span class="kwd">var</span> builder = <span class="cls">WebApplication</span>.<span class="fn">CreateBuilder</span>(args);
+
+<span class="cmt">// Add services to the container.</span>
+builder.Services.<span class="fn">AddControllersWithViews</span>();
+builder.Services.<span class="fn">AddHttpClient</span>();
+
+<span class="kwd">var</span> app = builder.<span class="fn">Build</span>();
+
+<span class="cmt">// Configure the HTTP request pipeline.</span>
+<span class="kwd">if</span> (!app.Environment.<span class="fn">IsDevelopment</span>())
+{
+    app.<span class="fn">UseExceptionHandler</span>(<span class="str">"/Home/Error"</span>);
+    <span class="cmt">// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.</span>
+    app.<span class="fn">UseHsts</span>();
+}
+
+app.<span class="fn">UseHttpsRedirection</span>();
+app.<span class="fn">UseStaticFiles</span>();
+
+app.<span class="fn">UseRouting</span>();
+
+app.<span class="fn">UseAuthorization</span>();
+
+app.<span class="fn">MapControllerRoute</span>(
+    name: <span class="str">"default"</span>,
+    pattern: <span class="str">"{controller=Home}/{action=Index}/{id?}"</span>);
+
+app.<span class="fn">Run</span>();</pre>
+
+  <div class="info-box"><strong>&iquest;Qu&eacute; hace <code>AddHttpClient()</code>?</strong> Registra <code>HttpClient</code> en el contenedor de dependencias. As&iacute; el constructor de <code>AutorController(HttpClient httpClient)</code> recibe un cliente listo y no tengo que crear instancias manualmente.</div>
+
+  <h3 id="cliente-paso3">5.3. Models: Autor, Libro, ApiResponse&lt;T&gt;</h3>
+
+  <p>Son los mismos Models que la API. El cliente los necesita para que <code>JsonConvert</code> pueda <strong>mapear el JSON</strong> de la respuesta a objetos C#. Los nombres de las propiedades deben coincidir con los del JSON.</p>
+
+  <span class="code-label">Models/Autor.cs (cliente)</span>
+<pre><span class="kwd">namespace</span> WebApplication1.Models
+{
+    <span class="kwd">public</span> <span class="kwd">class</span> <span class="cls">Autor</span>
+    {
+        <span class="kwd">public</span> <span class="cls">int</span> AutorId { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">string</span> Nombre { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">string</span> Nacionalidad { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    }
+}</pre>
+
+  <span class="code-label">Models/Libro.cs (cliente)</span>
+<pre><span class="kwd">namespace</span> WebApplication1.Models
+{
+    <span class="kwd">public</span> <span class="kwd">class</span> <span class="cls">Libro</span>
+    {
+        <span class="kwd">public</span> <span class="cls">int</span> LibroId { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">int</span> AutorId { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">string</span> Titulo { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">string</span> ISBN { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">int</span> AnioPublicacion { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">string</span> Autor { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    }
+}</pre>
+
+  <span class="code-label">Models/ApiResponse.cs (cliente)</span>
+<pre><span class="kwd">namespace</span> WebApplication1.Models
+{
+    <span class="kwd">public</span> <span class="kwd">class</span> <span class="cls">ApiResponse</span>&lt;<span class="cls">T</span>&gt;
+    {
+        <span class="kwd">public</span> <span class="cls">string</span> message { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">bool</span> success { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+        <span class="kwd">public</span> <span class="cls">T</span> data { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    }
+}</pre>
+
+  <h3 id="cliente-paso4">5.4. Controllers/AutorController.cs (el consumidor con HttpClient)</h3>
+
+  <p>Este es el coraz&oacute;n del cliente. Aqu&iacute; est&aacute; la <strong>regla del puerto</strong> aplicada: <code>apiBase = "https://localhost:7229"</code>. El controller inyecta <code>HttpClient</code>, hace <code>GET</code> a <code>api/Autor</code> y deserializa la respuesta.</p>
+
+  <span class="code-label">Controllers/AutorController.cs (cliente)</span>
+<pre><span class="kwd">using</span> Microsoft.AspNetCore.Mvc;
+<span class="kwd">using</span> Newtonsoft.Json;
+<span class="kwd">using</span> WebApplication1.Models;
+
+<span class="kwd">namespace</span> WebApplication1.Controllers
+{
+    <span class="kwd">public</span> <span class="kwd">class</span> <span class="cls">AutorController</span> : <span class="cls">Controller</span>
+    {
+        <span class="kwd">private readonly</span> <span class="cls">HttpClient</span> _httpClient;
+        <span class="kwd">private readonly string</span> apiBase = <span class="str">"https://localhost:7229"</span>;
+
+        <span class="kwd">public</span> <span class="fn">AutorController</span>(<span class="cls">HttpClient</span> httpClient)
+        {
+            _httpClient = httpClient;
+            _httpClient.BaseAddress = <span class="kwd">new</span> <span class="cls">Uri</span>(apiBase);
+        }
+
+        <span class="kwd">public async</span> <span class="cls">Task</span>&lt;<span class="cls">IActionResult</span>&gt; <span class="fn">Index</span>()
+        {
+            <span class="kwd">var</span> resp = <span class="kwd">await</span> _httpClient.<span class="fn">GetAsync</span>(<span class="str">"api/Autor"</span>);
+            <span class="kwd">var</span> contenido = resp.Content.<span class="fn">ReadAsStringAsync</span>().<span class="fn">Result</span>;
+            <span class="cls">List</span>&lt;<span class="cls">Autor</span>&gt; lista = <span class="cls">JsonConvert</span>.<span class="fn">DeserializeObject</span>&lt;<span class="cls">List</span>&lt;<span class="cls">Autor</span>&gt;&gt;(contenido);
+            <span class="kwd">return</span> <span class="fn">View</span>(<span class="kwd">await</span> <span class="cls">Task</span>.<span class="fn">Run</span>(() =&gt; lista));
+        }
+    }
+}</pre>
+
+  <div class="info-box"><strong>Paso a paso del consumo:</strong> (1) <code>BaseAddress</code> apunta a la API; (2) <code>GetAsync("api/Autor")</code> hace la llamada HTTP a <code>https://localhost:7229/api/Autor</code>; (3) <code>ReadAsStringAsync</code> lee el body como texto (JSON); (4) <code>JsonConvert.DeserializeObject&lt;List&lt;Autor&gt;&gt;</code> convierte el JSON en una lista de objetos; (5) <code>View(lista)</code> pasa esa lista a la vista.</div>
+
+  <h3 id="cliente-paso5">5.5. La vista clave: Views/Autor/Index.cshtml</h3>
+
+  <p>Recibe <code>IEnumerable&lt;Autor&gt;</code> (el modelo) y lo pinta en una tabla con Razor. Es la misma vista que genera el scaffolding del profe.</p>
+
+  <span class="code-label">Views/Autor/Index.cshtml (cliente)</span>
+<pre><span class="tag">@model</span> IEnumerable&lt;WebApplication1.Models.Autor&gt;
+
+<span class="tag">@{</span>
+    ViewData[<span class="str">"Title"</span>] = <span class="str">"Index"</span>;
+<span class="tag">}</span>
+
+<span class="tag">&lt;h1&gt;</span>Index<span class="tag">&lt;/h1&gt;</span>
+
+<span class="tag">&lt;p&gt;</span>
+    <span class="tag">&lt;a</span> <span class="attr">asp-action</span>=<span class="str">"Create"</span><span class="tag">&gt;</span>Create New<span class="tag">&lt;/a&gt;</span>
+<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;table</span> <span class="attr">class</span>=<span class="str">"table"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;thead&gt;</span>
+        <span class="tag">&lt;tr&gt;</span>
+            <span class="tag">&lt;th&gt;</span>
+                <span class="tag">@Html.DisplayNameFor</span>(model =&gt; model.AutorId)
+            <span class="tag">&lt;/th&gt;</span>
+            <span class="tag">&lt;th&gt;</span>
+                <span class="tag">@Html.DisplayNameFor</span>(model =&gt; model.Nombre)
+            <span class="tag">&lt;/th&gt;</span>
+            <span class="tag">&lt;th&gt;</span>
+                <span class="tag">@Html.DisplayNameFor</span>(model =&gt; model.Nacionalidad)
+            <span class="tag">&lt;/th&gt;</span>
+            <span class="tag">&lt;th&gt;&lt;/th&gt;</span>
+        <span class="tag">&lt;/tr&gt;</span>
+    <span class="tag">&lt;/thead&gt;</span>
+    <span class="tag">&lt;tbody&gt;</span>
+<span class="tag">@foreach</span> (var item in Model) {
+        <span class="tag">&lt;tr&gt;</span>
+            <span class="tag">&lt;td&gt;</span>
+                <span class="tag">@Html.DisplayFor</span>(modelItem =&gt; item.AutorId)
+            <span class="tag">&lt;/td&gt;</span>
+            <span class="tag">&lt;td&gt;</span>
+                <span class="tag">@Html.DisplayFor</span>(modelItem =&gt; item.Nombre)
+            <span class="tag">&lt;/td&gt;</span>
+            <span class="tag">&lt;td&gt;</span>
+                <span class="tag">@Html.DisplayFor</span>(modelItem =&gt; item.Nacionalidad)
+            <span class="tag">&lt;/td&gt;</span>
+            <span class="tag">&lt;td&gt;</span>
+                <span class="tag">@Html.ActionLink</span>(<span class="str">"Edit"</span>, <span class="str">"Edit"</span>, <span class="kwd">new</span> { <span class="cmt">/* id=item.PrimaryKey */</span> }) |
+                <span class="tag">@Html.ActionLink</span>(<span class="str">"Details"</span>, <span class="str">"Details"</span>, <span class="kwd">new</span> { <span class="cmt">/* id=item.PrimaryKey */</span> }) |
+                <span class="tag">@Html.ActionLink</span>(<span class="str">"Delete"</span>, <span class="str">"Delete"</span>, <span class="kwd">new</span> { <span class="cmt">/* id=item.PrimaryKey */</span> })
+            <span class="tag">&lt;/td&gt;</span>
+        <span class="tag">&lt;/tr&gt;</span>
+}
+    <span class="tag">&lt;/tbody&gt;</span>
+<span class="tag">&lt;/table&gt;</span></pre>
+
+  <div class="warn-box"><strong>Ojo:</strong> los enlaces Edit/Details/Delete apuntan a acciones que <strong>no existen</strong> en este cliente (solo hay <code>Index</code>). Son restos del scaffolding; si los presionas, recibir&aacute;s un 404. El profe los dej&oacute; as&iacute;.</div>
+
+  <h3 id="cliente-paso6">5.6. launchSettings.json y c&oacute;mo ejecutar el cliente</h3>
+
+  <p>El cliente corre en <code>http://localhost:5217</code> (y <code>https://localhost:7179</code>). Como no tiene Swagger, <code>launchBrowser</code> abre la portada (Home). Para ver los datos, navega a <code>/Autor</code>.</p>
+
+  <span class="code-label">Properties/launchSettings.json (cliente)</span>
+<pre>{
+  <span class="str">"iisSettings"</span>: {
+    <span class="str">"windowsAuthentication"</span>: <span class="kwd">false</span>,
+    <span class="str">"anonymousAuthentication"</span>: <span class="kwd">true</span>,
+    <span class="str">"iisExpress"</span>: {
+      <span class="str">"applicationUrl"</span>: <span class="str">"http://localhost:5159"</span>,
+      <span class="str">"sslPort"</span>: <span class="num">44324</span>
+    }
+  },
+  <span class="str">"profiles"</span>: {
+    <span class="str">"http"</span>: {
+      <span class="str">"commandName"</span>: <span class="str">"Project"</span>,
+      <span class="str">"dotnetRunMessages"</span>: <span class="kwd">true</span>,
+      <span class="str">"launchBrowser"</span>: <span class="kwd">true</span>,
+      <span class="str">"applicationUrl"</span>: <span class="str">"http://localhost:5217"</span>,
+      <span class="str">"environmentVariables"</span>: {
+        <span class="str">"ASPNETCORE_ENVIRONMENT"</span>: <span class="str">"Development"</span>
+      }
+    },
+    <span class="str">"https"</span>: {
+      <span class="str">"commandName"</span>: <span class="str">"Project"</span>,
+      <span class="str">"dotnetRunMessages"</span>: <span class="kwd">true</span>,
+      <span class="str">"launchBrowser"</span>: <span class="kwd">true</span>,
+      <span class="str">"applicationUrl"</span>: <span class="str">"https://localhost:7179;http://localhost:5217"</span>,
+      <span class="str">"environmentVariables"</span>: {
+        <span class="str">"ASPNETCORE_ENVIRONMENT"</span>: <span class="str">"Development"</span>
+      }
+    },
+    <span class="str">"IIS Express"</span>: {
+      <span class="str">"commandName"</span>: <span class="str">"IISExpress"</span>,
+      <span class="str">"launchBrowser"</span>: <span class="kwd">true</span>,
+      <span class="str">"environmentVariables"</span>: {
+        <span class="str">"ASPNETCORE_ENVIRONMENT"</span>: <span class="str">"Development"</span>
+      }
+    }
+  }
+}</pre>
+
+  <h3 id="cliente-paso7">5.7. C&oacute;mo se conectan los 2 proyectos y la prueba integrada</h3>
+
+  <p>Para que la p&aacute;gina del cliente muestre los autores, <strong>primero debe estar corriendo la API</strong> (en <code>https://localhost:7229</code>). El orden de ejecuci&oacute;n importa:</p>
+
+  <ol>
+    <li class="summary-step"><strong>Levantar la API</strong>: F5 en <code>WebApi\WebApplication1</code> (perfil <code>https</code>). Queda en <code>https://localhost:7229/swagger</code>.</li>
+    <li class="summary-step"><strong>Levantar el cliente</strong>: F5 en <code>ConsumoServicios\WebApplication1</code>. Abre <code>http://localhost:5217</code>.</li>
+    <li class="summary-step"><strong>Navegar a <code>http://localhost:5217/Autor</code></strong>: el controller hace <code>GET https://localhost:7229/api/Autor</code> y la vista pinta la tabla con los autores de <code>DB_BIBLIOTECA</code>.</li>
+  </ol>
+
+  <div class="postman">
+    <strong>Prueba integrada manual (equivalente en el navegador):</strong><br>
+    Con la API y el cliente corriendo, abro <code>http://localhost:5217/Autor</code> y verifico que la tabla muestre:<br>
+    <code>1</code> &mdash; Garc&iacute;a M&aacute;rquez &nbsp;|&nbsp; <code>2</code> &mdash; Vargas Llosa.
+  </div>
+
+  <div class="danger-box"><strong>Error t&iacute;pico de conexi&oacute;n:</strong> si el cliente sale con error <em>"The SSL connection could not be established"</em> o <em>certificate validation</em>, es el certificado de desarrollo. Soluci&oacute;n: ejecutar una vez <code>dotnet dev-certs https --trust</code>. Tambi&eacute;n verifica que la API est&eacute; corriendo y que <code>apiBase</code> coincida con el puerto HTTPS real de la API (regla del puerto).</div>
+</div>
+
+<!-- ============================================================ -->
 <div class="section-card" id="errores">
-  <h2>5. Errores reales que resolv&iacute; (para no volver a tropezar)</h2>
+  <h2>6. Errores reales que resolv&iacute; (para no volver a tropezar)</h2>
 
   <p>Estos son los errores que me aparecieron durante la r&eacute;plica y c&oacute;mo los resolv&iacute;:</p>
 
@@ -961,6 +1245,18 @@ SELECT LibroId, AutorId, Titulo, ISBN, AnioPublicacion FROM DB_BIBLIOTECA.dbo.Li
       <td>No hab&iacute;a perfil activo definido</td>
       <td>En <code>WebApplication1.csproj.user</code> puse <code>&lt;ActiveDebugProfile&gt;https&lt;/ActiveDebugProfile&gt;</code></td>
     </tr>
+    <tr>
+      <td>8</td>
+      <td>Le puse <code>Microsoft.Data.SqlClient</code> al cliente MVC (de costumbre, porque la API lo usa)</td>
+      <td>El cliente <strong>no toca SQL Server</strong>: solo consume la API por HTTP con <code>HttpClient</code></td>
+      <td>Quitar el paquete del cliente; el <code>SqlClient</code> es <strong>exclusivo de la WebApi</strong>. En su lugar el cliente usa <code>Newtonsoft.Json</code></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>El cliente no ve&iacute;a los datos (tabla vac&iacute;a o error de conexi&oacute;n)</td>
+      <td>Faltaba levantar la API, o el <code>apiBase</code> no coincid&iacute;a con el puerto HTTPS de la API, o el certificado dev no era confiable</td>
+      <td>Levantar primero la API; <code>apiBase = "https://localhost:7229"</code> (regla del puerto); <code>dotnet dev-certs https --trust</code></td>
+    </tr>
   </table>
 
   <div class="warn-box"><strong>Regla de oro aprendida:</strong> cuando un <code>SqlCommand</code> ejecuta un SP que recibe par&aacute;metros, <strong>siempre</strong> hay que agregar <code>AddWithValue</code> por cada <code>@parametro</code> que el SP espere. Si falta uno, SQL Server lanza error y la API responde <code>500</code>.</div>
@@ -970,10 +1266,11 @@ SELECT LibroId, AutorId, Titulo, ISBN, AnioPublicacion FROM DB_BIBLIOTECA.dbo.Li
 
 <!-- ============================================================ -->
 <div class="section-card" id="resumen">
-  <h2>6. Resumen: orden de creaci&oacute;n por dependencias</h2>
+  <h2>7. Resumen: orden completo de creaci&oacute;n y ejecuci&oacute;n</h2>
 
   <p>Este es el orden que segu&iacute; (primero lo que no depende de nada, <strong>Program.cs al final</strong>):</p>
 
+  <h3>Proyecto 1: la API (WebApi\WebApplication1)</h3>
   <ol>
     <li class="summary-step"><strong>Crear el proyecto</strong>: <code>dotnet new webapi -n WebApplication1 -f net7.0</code></li>
     <li class="summary-step"><strong>Paquetes NuGet (via VS):</strong> <code>Microsoft.Data.SqlClient</code> 5.2.0 (+ Swashbuckle que ya viene)</li>
@@ -988,28 +1285,21 @@ SELECT LibroId, AutorId, Titulo, ISBN, AnioPublicacion FROM DB_BIBLIOTECA.dbo.Li
     <li class="summary-step"><strong>Probar los 6 endpoints</strong> en Swagger (y verificar en la base con <code>sqlcmd</code>)</li>
   </ol>
 
+  <h3>Proyecto 2: el cliente (ConsumoServicios\WebApplication1)</h3>
+  <ol>
+    <li class="summary-step"><strong>Crear el proyecto</strong>: <code>dotnet new mvc -n WebApplication1 -f net7.0</code></li>
+    <li class="summary-step"><strong>Paquete NuGet (via VS):</strong> <code>Newtonsoft.Json</code> 13.0.1 (<strong>no</strong> SqlClient)</li>
+    <li class="summary-step"><strong>Program.cs</strong> &rarr; agregar <code>AddHttpClient()</code></li>
+    <li class="summary-step"><strong>Models</strong> (Autor, Libro, ApiResponse&lt;T&gt;) &rarr; copiados de la API</li>
+    <li class="summary-step"><strong>Controllers/AutorController.cs</strong> &rarr; <code>apiBase = "https://localhost:7229"</code></li>
+    <li class="summary-step"><strong>Views/Autor/Index.cshtml</strong> &rarr; tabla con <code>IEnumerable&lt;Autor&gt;</code></li>
+    <li class="summary-step"><strong>launchSettings.json</strong> &rarr; <code>http://localhost:5217</code></li>
+    <li class="summary-step"><strong>Ejecutar la prueba integrada</strong>: API en 7229 + cliente en <code>http://localhost:5217/Autor</code></li>
+  </ol>
+
   <div class="flow-arrow">&#8681;</div>
 
-  <div class="info-box"><strong>Regla del puerto (una vez m&aacute;s):</strong> la API queda en <code>https://localhost:7229</code>. En la Fase 2 el cliente MVC usar&aacute; <code>apiBase = "https://localhost:7229"</code>.</div>
-</div>
-
-<!-- ============================================================ -->
-<div class="section-card" id="pendiente">
-  <h2>7. Pendiente: Fase 2 &mdash; cliente MVC (se agregar&aacute;)</h2>
-
-  <p>Cuando cree el proyecto <strong>cliente MVC</strong> (el equivalente a <code>TEMA03_CONSUMIR_SERVICIOS</code>) ampliar&eacute; esta gu&iacute;a con:</p>
-
-  <ul>
-    <li>Creaci&oacute;n del proyecto <code>dotnet new mvc -f net7.0</code> en una carpeta separada de <code>MiReplica</code>.</li>
-    <li>Agregar <code>Newtonsoft.Json</code> (13.0.1) de forma <strong>expl&iacute;cita</strong> (es transitivo de Swashbuckle en la API, pero el cliente necesita su propia referencia).</li>
-    <li><code>Program.cs</code> del cliente: <code>AddControllersWithViews()</code> + <code>AddHttpClient()</code>.</li>
-    <li>Models del cliente (Autor, Libro, ApiResponse&lt;T&gt;) para deserializar el JSON.</li>
-    <li><code>AutorController</code> con <code>apiBase = "https://localhost:7229"</code> y sus vistas (<code>Views/Autor/Index.cshtml</code> con la tabla).</li>
-    <li>Prueba integrada: API en 7229 + cliente navegando a <code>http://localhost:5217/Autor</code>.</li>
-    <li>Verificaci&oacute;n de que la regla del puerto se cumple (apiBase == puerto HTTPS de la API).</li>
-  </ul>
-
-  <div class="warn-box"><strong>Espacio reservado:</strong> esta secci&oacute;n se reemplazar&aacute; por el contenido completo del cliente MVC cuando est&eacute; listo.</div>
+  <div class="info-box"><strong>Regla del puerto (una vez m&aacute;s):</strong> la API queda en <code>https://localhost:7229</code> y el cliente usa <code>apiBase = "https://localhost:7229"</code>. Si cambio el puerto HTTPS de la API, debo cambiar el <code>apiBase</code> del cliente.</div>
 </div>
 
 </div>
